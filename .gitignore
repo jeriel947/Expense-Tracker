@@ -3,4 +3,4 @@ __pycache__/
 .env
 data/expenses.json
 data/expense_backup.json
-
+plan.txt
