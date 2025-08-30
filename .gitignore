@@ -2,4 +2,5 @@ __pycache__/
 *.pyc
 .env
 data/expenses.json
+data/expense_backup.json
 

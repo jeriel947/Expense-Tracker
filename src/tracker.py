@@ -19,7 +19,6 @@ def verify_category(category: str):
     else:
         raise ValueError(f"Invalid category: {category}. Must be one of {CATEGORIES}.")
 
-    
 def load_expenses():
     try:
         with open(DATA_FILE, "r") as f:
@@ -75,7 +74,6 @@ def input_detail():
         "amount": amount
     }
 
-
 #list mutation functions
 def add_expense(date, category, desc, amount):
 
@@ -98,66 +96,31 @@ def add_expense(date, category, desc, amount):
     save_expenses(expenses)
     print("Expense added!")
 
-def edit_expense():
+def edit_expense(id, date=None, category=None, desc=None, amount=None):
     expenses = load_expenses()
-    expense_id = input("id: ")
     for exp in expenses:
-        if exp["id"] == expense_id:
-            new_data = {}
-            while True:
-                user_input = input(
-                    "1.Date \n2.Category \n3.Description \n4.Amount \n5.All \n6.Done \ninput: "
-                )
-                if user_input == "1":
-                    while True:
-                        date = input("Enter date (YYYY-MM-DD/today/exit): ")
-                        if date.lower() == "today":
-                            date = datetime.now().strftime("%Y-%m-%d")
-                        if date.lower() == "exit":
-                            break
-                        try:
-                            datetime.strptime(date, "%Y-%m-%d")
-                            new_data["date"] = date
-                            break
-                        except ValueError:
-                            print("Invalid date. Try again.")
-                elif user_input == "2":
-                    print("Select a category:")
-                    while True:
-                        for i, cat in enumerate(CATEGORIES, start=1):
-                            print(f"{i}. {cat}")
-                        choice = input("Enter number: ")
-                        if choice.isdigit() and 1 <= int(choice) <= len(CATEGORIES):
-                            new_data["category"] = CATEGORIES[int(choice) - 1]
-                            break
-                        print("Invalid input. Try again.")
-                elif user_input == "3":
-                    new_data["desc"] = input("Enter description: ")
-                elif user_input == "4":
-                    while True:
-                        amount = input("Enter amount: ")
-                        if amount.lower() == "exit":
-                            break
-                        try:
-                            new_data["amount"] = float(amount)
-                            break
-                        except ValueError:
-                            print("Invalid amount. Try again.")
-                elif user_input == "5":
-                    data = input_detail()
-                    new_data.update(data)
-                elif user_input == "6":
-                    break
+        if exp["id"] == id:
+            new_data = {} 
+            if date:
+                try:
+                    datetime.strptime(date, "%Y-%m-%d")
+                    new_data["date"] = date
+                except ValueError:
+                    print("Invalid date, format: YYYY-MM-DD")
+            if category:
+                new_data["category"] = category
+            if desc:
+                new_data["desc"] = desc
+            if amount:
+                new_data["amount"] = amount
 
             exp.update(new_data)
-            break
+            save_expenses(expenses)
+            print(f"Expense {id} updated!")
+            return
 
-    else:
-        print(f"No expense found with ID {expense_id}")
-        return
+    print(f"No expense found with ID {id}")
 
-    save_expenses(expenses)
-    print(f"Expense {expense_id} updated!")
 
 def delete_expense(expense_id):
     expenses = load_expenses()
@@ -289,7 +252,13 @@ def main():
     add_parser.add_argument("--desc", required=True, help="Description of expense")
     add_parser.add_argument("--amount", required=True, type=float, help="Amount of expense")
 
-
+    #edit command
+    edit_parser = subparsers.add_parser("edit", help="edit expenses")
+    edit_parser.add_argument("id", type=int, help="Expense ID to edit")
+    edit_parser.add_argument("--date", required=False, help="Date of expense (YYYY-MM-DD)")
+    edit_parser.add_argument("--category", required=False, help="Category of expense")
+    edit_parser.add_argument("--desc", required=False, help="Description of expense")
+    edit_parser.add_argument("--amount", required=False, type=float, help="Amount of expense")
 
     # Delete command
     delete_parser = subparsers.add_parser("delete", help="Delete an expense by ID")
@@ -313,6 +282,14 @@ def main():
 
     if args.command == "add":
         add_expense(args.date, args.category, args.desc, args.amount)
+
+    elif args.command == "edit":
+        item_date = args.date if args.date else None
+        category = verify_category(args.category) if args.category else None
+        desc = args.desc if args.desc else None
+        amount = args.amount if args.amount else None
+
+        edit_expense(args.id, date=item_date, category=verify_category(category), desc=desc, amount=amount)
 
     elif args.command == "delete":
         delete_expense(args.id)
