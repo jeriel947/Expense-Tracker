@@ -5,14 +5,15 @@ import argparse
 
 DATA_FILE = "data/expenses.json"
 
-CATEGORIES = [
-"Sustenance", "Housing", "Transportation",
-"Bills", "Shopping", "Entertainment",
-"Health & Fitness", "Education", "Savings & Investments",
-"Debt Payments", "Gifts & Donations", "Travel", "Other"
-]
-
 def verify_category(category: str):
+
+    CATEGORIES = [
+    "Sustenance", "Housing", "Transportation",
+    "Bills", "Shopping", "Entertainment",
+    "Health & Fitness", "Education", "Savings & Investments",
+    "Debt Payments", "Gifts & Donations", "Travel", "Other"
+    ]
+
     category = category.strip().capitalize()
     if category in CATEGORIES:
         return category
@@ -31,59 +32,12 @@ def load_expenses():
 def save_expenses(expenses):
     with open(DATA_FILE, "w") as f:
         json.dump(expenses, f, indent=2)
-#retro function
-def input_detail():
-
-    print("Select a category:")
-    while True:
-        for i, cat in enumerate(CATEGORIES, start=1):
-            print(f"{i}. {cat}")
-        choice = input("Enter number: ")
-        if choice.isdigit() and 1 <= int(choice) <= len(CATEGORIES):
-            category = CATEGORIES[int(choice)-1]
-            break
-        print("Invalid input. Try again.")
-    
-    desc = input("Enter description: ")
-    while True:
-        amount = input("Enter amount: ")
-        if amount.lower() == "exit":
-            return None
-        try:
-            float(amount)
-            break
-        except ValueError:
-            print("Invalid amount. Try again.")
-
-    while True:
-        date = input("Enter date (YYYY-MM-DD/today/exit): ")
-        if date == "exit":
-            return None
-        if date.lower() == "today":
-            date = datetime.now().strftime("%Y-%m-%d")
-        try:
-            datetime.strptime(date, "%Y-%m-%d")
-            break
-        except ValueError:
-            print("Invalid date. Try again.")
-
-    return {
-        "date": date,
-        "category": category,
-        "desc": desc,
-        "amount": amount
-    }
 
 #list mutation functions
 def add_expense(date, category, desc, amount):
 
     expenses = load_expenses()
     next_id = (max([e["id"] for e in expenses]) + 1) if expenses else 1
-    # user_input = input_detail()
-
-    # if user_input is None:
-    #     print("Action cancelled.")
-    #     return  
 
     expenses.append({
         "id": next_id,
@@ -121,14 +75,8 @@ def edit_expense(id, date=None, category=None, desc=None, amount=None):
 
     print(f"No expense found with ID {id}")
 
-
 def delete_expense(expense_id):
     expenses = load_expenses()
-    # while True:
-    #     expense_id = input("id: ")
-
-    #     if expense_id.lower() == "exit":
-    #         return
 
     new_expenses = [exp for exp in expenses if exp.get("id") != int(expense_id)]
 
@@ -151,27 +99,20 @@ def list_expenses():
 #filters
 def filter_by_category(category):
     expenses = load_expenses()
-    # while True:
-    #     for i, cat in enumerate(CATEGORIES, start=1):
-    #         print(f"{i}. {cat}")
-    #     choice = input("Enter number: ")
-    #     if choice.isdigit() and 1 <= int(choice) <= len(CATEGORIES):
-    #         category = CATEGORIES[int(choice)-1]
-    #         break
-    #     print("Invalid input. Try again.")
+
     [print(exp) for exp in expenses if exp.get("category") == category]
 
 def filter_by_date(start_str, end_str):
     expenses = load_expenses()
     while True:
-        # start_str = input("Enter start date (YYYY-MM): ")
+
         try:
             start_str += "-01"
             start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
         except ValueError:
             print("Invalid date format")
             continue
-        # end_str = input("Enter end date (YYYY-MM): ")
+
         try:
             year, month = map(int, end_str.split("-"))
             _, max_days = calendar.monthrange(year, month)
@@ -187,14 +128,14 @@ def filter_by_date(start_str, end_str):
 def filter_by_amount(start_amount, end_amount):
     expenses = load_expenses()
     while True:
-        # start_amount = input("Enter start amount: ")
+
         try:
             float(start_amount)
             break
         except ValueError:
             print("Invalid input")
     while True:
-        # end_amount = input("Enter End amount: ")
+
         try:
             float(end_amount)
             break
@@ -206,9 +147,9 @@ def filter_by_amount(start_amount, end_amount):
 def summary_by_month(month, year):
     expenses = load_expenses()
     while True:
-        #month_str = input("Enter month (MM): ")
+
         try:
-            # month = int(month_str)
+
             if 1 <= month <= 12:
                 break
             else:
@@ -227,15 +168,6 @@ def summary_by_month(month, year):
 
 def summary_by_category(category, year):
     expenses = load_expenses()
-    # this_year = datetime.now().year
-    # while True:
-    #     for i, cat in enumerate(CATEGORIES, start=1):
-    #         print(f"{i}. {cat}")
-    #     choice = input("Enter number: ")
-    #     if choice.isdigit() and 1 <= int(choice) <= len(CATEGORIES):
-    #         category = CATEGORIES[int(choice)-1]
-    #         break
-    #     print("Invalid input. Try again.")
     cost = sum(float(exp["amount"]) for exp in expenses if exp["category"] == category and datetime.strptime(exp["date"], "%Y-%m-%d").year == year)
     print(f"cost of spending on {category} for the year {year} = {cost:.2f}")
 
