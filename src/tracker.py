@@ -2,6 +2,10 @@ import json
 from datetime import datetime, date
 import calendar
 import argparse
+from tabulate import tabulate
+from colorama import Fore, Style, init
+init(autoreset=True)
+
 
 DATA_FILE = "data/expenses.json"
 
@@ -77,24 +81,38 @@ def edit_expense(id, date=None, category=None, desc=None, amount=None):
 
 def delete_expense(expense_id):
     expenses = load_expenses()
+    new_expenses = [exp for exp in expenses if exp["id"] != expense_id]
 
-    new_expenses = [exp for exp in expenses if exp.get("id") != int(expense_id)]
+    if len(new_expenses) == len(expenses):
+        print(Fore.RED + f"No expense found with ID {expense_id}")
+    else:
+        save_expenses(new_expenses)
+        print(Fore.GREEN + f"Deleted expense with ID {expense_id}")
 
-    if len(expenses) == len(new_expenses):
-        print(f"No expense found with ID {expense_id}")
-        return
-
-    save_expenses(new_expenses)
-    print(f"Expense {expense_id} deleted!")
 
 #listing
+from tabulate import tabulate
+
 def list_expenses():
     expenses = load_expenses()
     if not expenses:
-        print("No expenses yet.")
+        print(Fore.YELLOW + "No expenses found.")
         return
-    for exp in expenses:
-        print(f"{exp['id']}. {exp['date']} | {exp['category']} | {exp['desc']} | {exp['amount']}")
+
+    headers = [Fore.CYAN + "ID", "Date", "Category", "Description", "Amount" + Style.RESET_ALL]
+    rows = [
+        [
+            Fore.MAGENTA + str(exp["id"]) + Style.RESET_ALL,
+            exp["date"],
+            Fore.BLUE + exp["category"] + Style.RESET_ALL,
+            exp["desc"],
+            Fore.GREEN + f"${exp['amount']:.2f}" + Style.RESET_ALL
+        ]
+        for exp in expenses
+    ]
+    print(tabulate(rows, headers=headers, tablefmt="pretty"))
+
+
 
 #filters
 def filter_by_category(category):
@@ -168,8 +186,12 @@ def summary_by_month(month, year):
 
 def summary_by_category(category, year):
     expenses = load_expenses()
-    cost = sum(float(exp["amount"]) for exp in expenses if exp["category"] == category and datetime.strptime(exp["date"], "%Y-%m-%d").year == year)
-    print(f"cost of spending on {category} for the year {year} = {cost:.2f}")
+    total = sum(exp["amount"] for exp in expenses 
+                if exp["category"].lower() == category.lower() and 
+                   exp["date"].startswith(str(year)))
+
+    print(Fore.CYAN + f"Summary for {category.title()} in {year}:" + Style.RESET_ALL)
+    print(Fore.GREEN + f"Total spent: ${total:.2f}" + Style.RESET_ALL)
 
 
 
